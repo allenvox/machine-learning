@@ -22,7 +22,6 @@ def linear_regression_until_real_delta(x_train, y_train, real_slope=4, alpha=0.0
     while delta_slope > delta_threshold:
         y_pred = X_design.dot(W)
         error = y_pred - y_train
-        W_old = W.copy()
         W_gradient = X_design.T.dot(error) / len(x_train)
         W = W - alpha * W_gradient
         delta_slope = np.abs(W[1] - real_slope)
@@ -73,6 +72,7 @@ print("Max error =", max_error_delta)
 # Generate predictions using the learned weights for the entire dataset for visualization
 y_pred_train = W_learned_delta[0] + W_learned_delta[1] * x_train
 y_pred_test = W_learned_delta[0] + W_learned_delta[1] * x_test
+
 
 # Plotting
 plt.figure(figsize=(10, 6))
