@@ -1,59 +1,69 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def sigmoid(z):
-    return 1 / (1 + np.exp(-z))
+class LogisticRegression:
+    def __init__(self, learning_rate=0.01, num_iterations=100000, fit_intercept=True, verbose=False):
+        self.learning_rate = learning_rate
+        self.num_iterations = num_iterations
+        self.fit_intercept = fit_intercept
+        self.verbose = verbose
 
-def logistic_regression(x_train, y_train, alpha=0.01, delta_threshold=0.01, max_iterations=1000):
-    X_design = np.vstack([np.ones(x_train.shape), x_train]).T
-    W = np.zeros(2)  # Initialize weights
-    delta_slope = np.inf
-    iterations = 0
-    while delta_slope > delta_threshold and iterations < max_iterations:
-        z = np.dot(X_design, W)
-        y_pred = sigmoid(z)
-        error = y_pred - y_train
-        W_gradient = np.dot(X_design.T, error) / len(x_train)
-        W -= alpha * W_gradient
-        delta_slope = np.linalg.norm(W_gradient)
-        iterations += 1
-    return W
+    def __add_intercept(self, X):
+        intercept = np.ones((X.shape[0], 1))
+        return np.concatenate((intercept, X), axis=1)
 
-# Generate binary dataset for classification
-np.random.seed(42)
-x_values = np.linspace(-10, 10, 100)
-y_values_real = (x_values > 0).astype(int)
+    def __sigmoid(self, z):
+        return 1 / (1 + np.exp(-z))
 
-# Split the dataset
-split_index = 80
-x_train, y_train = x_values[:split_index], y_values_real[:split_index]
-x_test, y_test = x_values[split_index:], y_values_real[split_index:]
+    def __loss(self, h, y):
+        return (-y * np.log(h) - (1 - y) * np.log(1 - h)).mean()
 
-# Train logistic regression model
-W_learned = logistic_regression(x_train, y_train)
-print("Learned weights:", W_learned)
+    def fit(self, X, y):
+        if self.fit_intercept:
+            X = self.__add_intercept(X)
+        # weights initialization
+        self.theta = np.zeros(X.shape[1])
+        for i in range(self.num_iterations):
+            z = np.dot(X, self.theta)
+            h = self.__sigmoid(z)
+            gradient = np.dot(X.T, (h - y)) / y.size
+            self.theta -= self.learning_rate * gradient
+            if (self.verbose == True and i % 10000 == 0):
+                z = np.dot(X, self.theta)
+                h = self.__sigmoid(z)
+                print(f'Loss: {self.__loss(h, y)}')
 
-# Test dataset across the entire range of x_values
-x_test_full = x_values
-y_test_full = y_values_real  # Use real values for comparison
+    def predict_prob(self, X):
+        if self.fit_intercept:
+            X = self.__add_intercept(X)
+        return self.__sigmoid(np.dot(X, self.theta))
 
-# Predictions on full test set
-X_test_full_design = np.vstack([np.ones(x_test_full.shape), x_test_full]).T
-z_test_full = np.dot(X_test_full_design, W_learned)
-y_pred_test_full = sigmoid(z_test_full)
+    def predict(self, X, threshold=0.5):
+        return self.predict_prob(X) >= threshold
 
-# Plotting
-plt.figure(figsize=(10, 6))
+# Generate more sample data with higher standard deviation
+np.random.seed(0)
+X1 = np.random.randn(100, 2) * 2 + [2, 2]
+X2 = np.random.randn(100, 2) * 2 + [-2, -2]
+X = np.vstack([X1, X2])
+y = np.hstack([np.zeros(100), np.ones(100)])
 
-# Real binary function
-plt.scatter(x_values, y_values_real, label='Real Binary Function', color='blue')
+# Create an instance of Logistic Regression Classifier
+model = LogisticRegression(learning_rate=0.1, num_iterations=300000, verbose=True)
 
-# Predictions on full test data
-plt.scatter(x_test_full, y_pred_test_full, label='Predictions (Full Test)', color='green', alpha=0.5)
+# Fit the model to the data
+model.fit(X, y)
 
-plt.title('Logistic Regression Model (Full Test)')
-plt.xlabel('X Value')
-plt.ylabel('Predicted Probability')
-plt.legend()
-plt.grid(True)
+# Predict probabilities
+probabilities = model.predict_prob(X)
+
+# Plot the decision boundary
+plt.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.coolwarm, s=100)
+x1_min, x1_max = X[:, 0].min() - .5, X[:, 0].max() + .5
+x2_min, x2_max = X[:, 1].min() - .5, X[:, 1].max() + .5
+xx1, xx2 = np.meshgrid(np.linspace(x1_min, x1_max), np.linspace(x2_min, x2_max))
+grid = np.c_[xx1.ravel(), xx2.ravel()]
+probs = model.predict_prob(grid).reshape(xx1.shape)
+plt.contour(xx1, xx2, probs, [0.5], linewidths=1, colors='black')
+
 plt.show()
