@@ -14,7 +14,7 @@ def euclidean_distance(point1, point2):
     return np.sqrt(np.sum((point1 - point2)**2))
 
 # Function to implement K-Nearest Neighbors algorithm
-def knn_predict(X_train, y_train, X_test, k=3):
+def knn_predict(X_train, y_train, X_test, k):
     predictions = []
     for test_point in X_test:
         distances = [euclidean_distance(test_point, train_point) for train_point in X_train]
@@ -25,7 +25,7 @@ def knn_predict(X_train, y_train, X_test, k=3):
     return np.array(predictions)
 
 # Function to visualize the data and the test points
-def plot_clusters(X_train, y_train, X_test, y_test, k=3):
+def plot_clusters(X_train, y_train, X_test, y_test, k):
     plt.figure(figsize=(10, 6))
 
     # Plot training points
@@ -50,8 +50,11 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 # Random points to classify
 random_points = np.array([[5.0, 3.5], [6.0, 2.5], [7.0, 4.0]])
 
+# K
+k = 6
+
 # Predict the labels of the random points using KNN
-predictions = knn_predict(X_train[:, :2], y_train, random_points, k=3)
+predictions = knn_predict(X_train[:, :2], y_train, random_points, k)
 
 # Visualize the clusters and the random points
-plot_clusters(X_train[:, :2], y_train, random_points, predictions)
+plot_clusters(X_train[:, :2], y_train, random_points, predictions, k)
