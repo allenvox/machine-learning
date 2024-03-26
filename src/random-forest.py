@@ -76,6 +76,18 @@ class DecisionTree:
         else:
             return self._predict_tree(x, tree['right'])
 
+    def print_tree(self, tree=None, indent=" "):
+        if tree is None:
+            tree = self.tree
+        if 'class' in tree:
+            print(str(tree['class']))
+        else:
+            print("X_" + str(tree['feature']) + " <= " + str(tree['threshold']) + "?")
+            print("%sleft:" % (indent), end="")
+            self.print_tree(tree['left'], indent + indent)
+            print("%sright:" % (indent), end="")
+            self.print_tree(tree['right'], indent + indent)
+
 
 class RandomForest:
     def __init__(self, n_estimators=100, max_depth=None, bootstrap_ratio=0.8):
@@ -92,6 +104,9 @@ class RandomForest:
             tree = DecisionTree(max_depth=self.max_depth)
             tree.fit(X[bootstrap_indices], y[bootstrap_indices])
             self.trees.append(tree)
+            for i, tree in enumerate(rf.trees):
+                print("Tree", i + 1)
+                tree.print_tree()
 
     def predict(self, X):
         predictions = np.array([tree.predict(X) for tree in self.trees])
